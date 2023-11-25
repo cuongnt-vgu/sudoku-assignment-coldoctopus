@@ -1,3 +1,5 @@
+#include <stdbool.h>
+
 #define BOARD_SIZE 9
 
 struct Cell_impl

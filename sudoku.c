@@ -28,6 +28,32 @@ void init_sudoku(SudokuBoard* boardRef)
     }
 }
 
+bool is_solved(SudokuBoard* boardRef)
+{
+    for (int i = 0; i < BOARD_SIZE; i++)
+    {
+        for (int j = 0; j < BOARD_SIZE; j++)
+        {
+            if (num_candidates(&boardRef->data[i][j]) != 1) return false;
+        }
+    }
+    return true;
+}
+
+void print_solution(SudokuBoard* boardRef)
+{
+    assert (is_solved(boardRef));
+
+    for (int i = 0; i < BOARD_SIZE; i++)
+    {
+        for (int j = 0; j < BOARD_SIZE; j++)
+        {
+            int *candidates = get_candidates(&boardRef->data[i][j]);
+            printf("%d", candidates[0]);
+        }
+    }
+}
+
 void set_candidate(Cell* cell, int value)
 {
     cell->candidate[value - 1] = 1;
@@ -129,47 +155,25 @@ void print_candidate_num(SudokuBoard* boardRef)
     }
 }
 
-void print_solution(SudokuBoard* boardRef)
+void solve_sudoku(char* sudokuText)
 {
-    for (int i = 0; i < BOARD_SIZE; i++)
-    {
-        for (int j = 0; j < BOARD_SIZE; j++)
-        {
-            assert(num_candidates(&boardRef->data[i][j]) == 1);
-            int* out = get_candidates(&boardRef->data[i][j]);
-            printf("%d ", out[0]);
-            free(out);
-        }
-        printf("\n");
-    }
-}
-
-int main()
-{
-    char* sudoku_text = "000105000140000670080002400063070010900000003010090520007200080026000035000409000";
     SudokuBoard* board = malloc(sizeof(SudokuBoard));
     init_sudoku(board);
-    load_sudoku(board, sudoku_text);
-    refine_candidate(board);
-    print_candidate_num(board);
-    printf("\n");
-    refine_candidate(board);
-    print_candidate_num(board);
-    printf("\n");
-    refine_candidate(board);
-    print_candidate_num(board);
-    printf("\n");
-    refine_candidate(board);
-    print_candidate_num(board);
-    printf("\n");
-    refine_candidate(board);
-    print_candidate_num(board);
-    printf("\n");
-    refine_candidate(board);
-    print_candidate_num(board);
-    printf("\n");
-    refine_candidate(board);
-    print_candidate_num(board);
+    load_sudoku(board, sudokuText);
+    while (!is_solved(board))
+    {
+        refine_candidate(board);
+    }
     print_solution(board);
+}
+
+int main(int argc, char *argv[])
+{
+    if (argc == 1)
+    {
+        printf("Usage: ./sudoku <input_sudoku>");
+        return -1;
+    }
+    solve_sudoku(argv[1]);
     return 0;
 }
