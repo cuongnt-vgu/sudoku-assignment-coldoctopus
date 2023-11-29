@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "public test",
+      "setup": "make sudoku",
+      "run": "bash test.sh",
+      "input": "",
+      "output": "",
+      "comparison": "exact",
+      "timeout": 10,
+      "points": null
+    }
+  ]
+}
