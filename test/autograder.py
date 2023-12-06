@@ -29,6 +29,13 @@ def eprint(s):
     print(color("Error: ", FAIL) + s)
 
 
+def print_mismatch(name, got, expected):
+    """Print a mismatch message for test paramater `name`"""
+    print(color(name, BOLD) + " mismatch:")
+    print("\t" + color("Got: ", FAIL) + str(got))
+    print("\t" + color("Expected: ", OKGREEN) + str(expected))
+
+
 def ensure_keys_exist(dictionary, keys):
     """Ensure that all keys in `keys` exist in `dictionary`"""
     for key in keys:
@@ -41,38 +48,14 @@ def run_test(test_name, test_parameters):
     """Run the test indicated by `test_parameters`"""
 
     # ensure all input test parameters are present
-    if not ensure_keys_exist(
-        test_parameters, ["seed", "key_input", "snake_grows", "output"]
-    ):
+    if not ensure_keys_exist(test_parameters, ["board_input", "method", "output"]):
         eprint("missing test input parameters")
         sys.exit(1)
 
     # ensure all output test parameters are present
-    if not ensure_keys_exist(
-        test_parameters["output"], ["game_over", "score", "width", "height", "cells"]
-    ) and not ensure_keys_exist(test_parameters["output"], ["board_error"]):
+    if not ensure_keys_exist(test_parameters["output"], ["num_detects", "boards"]):
         eprint("missing test output parameters")
         sys.exit(1)
-
-    # only do the following setup if this test has an expected board output
-    if test_parameters["output"].get("cells") is not None:
-        # Collapse output cell 2d array to 1d string
-        test_parameters["output"]["cells"] = "".join(test_parameters["output"]["cells"])
-        # Ensure that output board cells are well-formed
-        if (
-            len(test_parameters["output"]["cells"])
-            != test_parameters["output"]["width"] * test_parameters["output"]["height"]
-        ):
-            eprint(
-                "invalid test case. Length of `cells` is not equal to `width` * `height`"
-            )
-            sys.exit(1)
-
-    # if test specifies name, output should also specify name and length
-    if "name" in test_parameters:
-        if not ensure_keys_exist(test_parameters["output"], ["name", "name_len"]):
-            eprint("missing test output parameters (name and/or name_len)")
-            sys.exit(1)
 
     # Set up pipes so the autograder can send results back to us
     (r, w) = os.pipe()
@@ -84,17 +67,12 @@ def run_test(test_name, test_parameters):
     results = subprocess.run(
         [
             AUTOGRADER_BINARY,
-            "0"
-            if test_parameters.get("board") is None
-            else test_parameters.get("board"),
-            test_parameters.get("seed"),
-            test_parameters.get("snake_grows"),
-            test_parameters.get("key_input"),
-            "1" if "name" in test_parameters else "0",
+            test_parameters.get("board_input"),
+            test_parameters.get("method"),
             str(w),
         ],
         close_fds=False,
-        input=(test_parameters.get("name", "") + "\n").encode(),
+        # input=(test_parameters.get("name", "") + "\n").encode(),
     )
     if results.returncode != 0:
         results.returncode
@@ -112,65 +90,24 @@ def run_test(test_name, test_parameters):
     # Loop over keys in the expected output and actual output and print any discrepencies
     failure = False
 
-    expected_error = expected_output.get("board_error")
-    actual_error = actual_output.get("board_error")
-    if expected_error is not None and actual_error is not None:
-        if expected_error != actual_error:
+    keys_to_compare = ["num_detects", "boards"]
+    for key in keys_to_compare:
+        expected = expected_output[key]
+        actual = actual_output[key]
+        if expected != actual:
+            print_mismatch(key, actual, expected)
             failure = True
-            print_mismatch("board error", actual_error, expected_error)
-    elif expected_error is not None and actual_error is None:
-        failure = True
-        print_mismatch("board error", "success", expected_error)
-    elif expected_error is None and actual_error is not None:
-        failure = True
-        print_mismatch("board error", actual_error, "success")
-    else:
-        keys_to_compare = ["game_over", "score", "width", "height"]
-        for key in keys_to_compare:
-            expected = expected_output[key]
-            actual = actual_output[key]
-            if expected != actual:
-                print_mismatch(key, actual, expected)
-                failure = True
 
-        # We special case checking for mismatches in the boards so that we can pretty print
-        failure = (
-            print_board_mismatch(
-                actual_output["cells"],
-                expected_output["cells"],
-                expected_output["width"],
-                expected_output["height"],
-            )
-            or failure
-        )
-
-        # If name was specified, test name
-        if "name" in test_parameters:
-            expected_name = expected_output["name"]
-            name_bytes = actual_output["name"]
-
-            decode_hex = codecs.getdecoder("hex_codec")
-            try:
-                output_name = (decode_hex(name_bytes)[0]).decode("utf-8")
-                if output_name != expected_name:
-                    print_mismatch("name", output_name, expected_name)
-            except Exception as e:
-                print(
-                    "Got "
-                    + str(type(e))
-                    + " exception while decoding output name data!"
-                )
-                print(e)
-                print_mismatch("name", "bytes " + name_bytes, expected_name)
-                failure = True
-
-            keys_to_compare = ["name_len"]
-            for key in keys_to_compare:
-                expected = expected_output[key]
-                actual = actual_output[key]
-                if expected != actual:
-                    print_mismatch(key, actual, expected)
-                    failure = True
+    # We special case checking for mismatches in the boards so that we can pretty print
+    # failure = (
+    #     print_board_mismatch(
+    #         actual_output["cells"],
+    #         expected_output["cells"],
+    #         expected_output["width"],
+    #         expected_output["height"],
+    #     )
+    #     or failure
+    # )
 
     if failure:
         print(color("Test failed. See above for details", FAIL))
