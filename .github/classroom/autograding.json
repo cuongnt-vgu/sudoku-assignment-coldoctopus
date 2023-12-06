@@ -1,9 +1,9 @@
 {
   "tests": [
     {
-      "name": "public test",
-      "setup": "make sudoku",
-      "run": "bash test.sh",
+      "name": "All test cases",
+      "setup": "",
+      "run": "make check",
       "input": "",
       "output": "",
       "comparison": "exact",
