@@ -17,6 +17,25 @@ Students need to implements the following three algorithms:
 
 - Read: [Hidden singles](https://www.sudokuwiki.org/Getting_Started) 
 
+- Hint: You try use the [sudoku solver](https://www.sudokuwiki.org/sudoku.htm), pick the example "Gentle" and run step by step. When hidden singles are detected, the message shows the explanation for hidden singles.
+
+![Hidden singles detected](hidden_singles.png)
+
+```
+SINGLE: A1 set to 7, unique in Column and Box
+SINGLE: A4 set to 1, unique in Row
+SINGLE: B8 set to 1, unique in Box
+SINGLE: C3 set to 8, unique in Box
+SINGLE: C9 set to 4, unique in Row and Column and Box
+SINGLE: E1 set to 3, unique in Row
+SINGLE: E9 set to 9, unique in Row
+SINGLE: G1 set to 8, unique in Column
+SINGLE: G6 set to 7, unique in Row and Box
+SINGLE: G7 set to 4, unique in Column and Box
+SINGLE: J9 set to 1, unique in Column
+``` 
+
+
 ### Naked pair/triple
 
 - Read: [Naked pair/triple](https://www.sudokuwiki.org/Naked_Candidates) 
@@ -102,7 +121,8 @@ git remote add latest https://github.com/ntcuong2103/sudoku-assignment
 ```
 2. Pull the code
 ```
-git pull --rebase latest main
+git config pull.rebase true
+git pull latest main
 ```
 3. Synchronize changes
 
@@ -153,3 +173,22 @@ Modify `launch.conf`
             "cwd": "${workspaceFolder}",
             "args": ["000105000140000670080002400063070010900000003010090520007200080026000035000409000"],
 ```
+
+### Run test cases
+
+- Run all the test cases
+```
+make check
+```
+- Run range of test cases, for example 0 -> 5
+```
+make check-0-5
+```
+- Run single test case, for example 5
+```
+make check-5
+```
+
+### Input and expected output
+
+The input string and expected output string represent the sudoku board with candidates. You can import it directly to the [sudoku solver](https://www.sudokuwiki.org/sudoku.htm) -> "Import a sudoku" to check the step.
