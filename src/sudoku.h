@@ -6,8 +6,6 @@
 
 struct Cell_impl
 {
-struct Cell_impl
-{
     int row_index;
     int col_index;
     int box_index;
@@ -21,20 +19,13 @@ typedef struct Cell_impl Cell;
 
 struct SudokuBoard_impl
 {
-struct SudokuBoard_impl
-{
     int solved_counter;
-    Cell **data; // 9x9 cell board
     Cell **data; // 9x9 cell board
 
     Cell **p_rows[BOARD_SIZE];  // rows pointers
     Cell **p_cols[BOARD_SIZE];  // cols pointers
     Cell **p_boxes[BOARD_SIZE]; // boxes pointers
-    Cell **p_rows[BOARD_SIZE];  // rows pointers
-    Cell **p_cols[BOARD_SIZE];  // cols pointers
-    Cell **p_boxes[BOARD_SIZE]; // boxes pointers
     Cell *solved_cells[BOARD_SIZE *
-                       BOARD_SIZE]; // solved cell pointers (maximum)
                        BOARD_SIZE]; // solved cell pointers (maximum)
 };
 

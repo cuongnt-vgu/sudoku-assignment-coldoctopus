@@ -1,52 +1,48 @@
-#include "sudoku.h"
+#pragma once
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdbool.h>
 
-#include "hidden_singles.h"
+#define BOARD_SIZE 9
 
-int main(int argc, char **argv)
+struct Cell_impl
 {
-    if (argc != 2)
-    {
-        printf("Usage: %s <sudoku string>\n", argv[0]);
-        return 1;
-    }
+    int row_index;
+    int col_index;
+    int box_index;
+    int num_candidates;
+    int candidates[BOARD_SIZE];
+    int value; // solved or 0
+    bool fixed;
+};
 
-    SudokuBoard *board = malloc(sizeof(SudokuBoard));
-    init_sudoku(board);
-    load_sudoku(board, argv[1]);
-    load_sudoku(board, argv[1]);
+typedef struct Cell_impl Cell;
 
-    Cell **p_solved_cells = board->solved_cells;
-    int solved_counter = board->solved_counter;
-    while (board->solved_counter < BOARD_SIZE * BOARD_SIZE)
-    {
-        solved_counter = check_solved_cells(board, &p_solved_cells);
-        // printf("check_solved_cells %d\n", solved_counter);
-        if (show_possible(board, p_solved_cells, solved_counter))
-        {
-            // printf("show_possible -> Yes\n");
-            continue;
-        }
-        // solved_counter = hidden_singles(board);
-        // if (solved_counter)
-        // {
-        //     printf("hidden_singles %d\n", solved_counter);
-        //     continue;
-        // }
-        // solved_counter = hidden_singles(board);
-        // if (solved_counter)
-        // {
-        //     printf("hidden_singles %d\n", solved_counter);
-        //     continue;
-        // }
-    }
-    print_solution(board);
+struct SudokuBoard_impl
+{
+    int solved_counter;
+    Cell **data; // 9x9 cell board
 
-    // clean up
-    free_sudoku(board);
-    free(board);
-    return 0;
-}
+    Cell **p_rows[BOARD_SIZE];  // rows pointers
+    Cell **p_cols[BOARD_SIZE];  // cols pointers
+    Cell **p_boxes[BOARD_SIZE]; // boxes pointers
+    Cell *solved_cells[BOARD_SIZE *
+                       BOARD_SIZE]; // solved cell pointers (maximum)
+};
+
+typedef struct SudokuBoard_impl SudokuBoard;
+
+void init_sudoku(SudokuBoard *p_board);
+void load_sudoku(SudokuBoard *p_board, char *input_text);
+bool apply_constraint(Cell **p_cells, int value);
+bool is_in_list(Cell **p_array, int size, Cell *p);
+void print_candidate_num(SudokuBoard *p_board);
+void print_solution(SudokuBoard *p_board);
+
+void set_candidate(Cell *cell, int value);
+void unset_candidate(Cell *cell, int value);
+void set_candidates(Cell *cell, int *candidates, int size);
+int *get_candidates(Cell *cell);
+
+int check_solved_cells(SudokuBoard *p_board, Cell ***p_solved_cells);
+bool show_possible(SudokuBoard *p_board, Cell **p_solved_cells, int counter);
+void free_sudoku(SudokuBoard *p_board);
