@@ -1,5 +1,6 @@
 #include "naked_pairs.h"
 #include <string.h>
+#include <stdlib.h>
 
 //extra funcs from utils.c
 void unset_candidate(Cell *cell, int value);
@@ -34,11 +35,10 @@ int eliminate_candidates_except_npairs(Cell *cell, int *candidates, int size) { 
     return counter;
 }
 */
-
-void find_naked_pairs_values(Cell **p_cells, int *naked_pairs_values)
+/*
+int check_naked_pairs(Cell **p_cells, int *naked_pairs_values)
 {
     int counter = 0;
-
     for (int i = 0; i < BOARD_SIZE; i++)
     {
         // Skip cells with more than two candidates
@@ -56,6 +56,7 @@ void find_naked_pairs_values(Cell **p_cells, int *naked_pairs_values)
             }
 
             // Check if the candidates are the same in both cells
+            
             if (p_cells[i]->candidates[0] == p_cells[j]->candidates[0] &&
                 p_cells[i]->candidates[1] == p_cells[j]->candidates[1])
             {
@@ -63,32 +64,18 @@ void find_naked_pairs_values(Cell **p_cells, int *naked_pairs_values)
                 naked_pairs_values[counter++] = p_cells[i]->candidates[0];
                 naked_pairs_values[counter++] = p_cells[i]->candidates[1];
             }
+            if(p_cells[i]->num_candidates == 2 && p_cells[i]->num_candidates == 2 && memcmp(p_cells[i]->candidates, p_cells[j]->candidates, BOARD_SIZE)){
+                naked_pairs_values[counter++] = p_cells[i]->candidates[0];
+                naked_pairs_values[counter++] = p_cells[i]->candidates[1];
+            }
         }
     }
 
-    //return counter;
-}
-/*
-void eliminate_candidates_npairs(Cell **p_cells, int index1, int index2) {
-    //int counter = 0;
-
-    // Get the naked pair candidates
-    int candidates[2];      //initiate a temp array candidates to store
-    candidates[0] = get_candidates(p_cells[index1])[0];
-    candidates[1] = get_candidates(p_cells[index1])[1];
-
-    // Eliminate the naked pair candidates from other cells in the group
-    for (int i = 0; i < BOARD_SIZE; i++) {
-        if (i != index1 && i != index2) {       //also eliminate in other cells in group
-            unset_candidate(p_cells,candidates[0]);
-            unset_candidate(p_cells,candidates[1]);
-        }
-    }
-
-    //return counter;
+    return counter;
 }
 */
 
+/*
 int are_naked_pairs(Cell *cell1, Cell *cell2) {
     // Check if two cells have the same two candidates
     if (cell1->num_candidates == 2 && cell2->num_candidates == 2 && memcmp(cell1->candidates, cell2->candidates, BOARD_SIZE)){
@@ -99,22 +86,45 @@ int are_naked_pairs(Cell *cell1, Cell *cell2) {
 
 int check_naked_pairs(Cell **p_cells) {
     int counter = 0;
-    int naked_pairs_values[BOARD_SIZE];
-    find_naked_pairs_values(p_cells, naked_pairs_values);
+    //int naked_pairs_values[BOARD_SIZE];
+    //int candidates[2] = {0};
+
+    //int num_naked_pairs = check_naked_pairs(p_cells, naked_pairs_values);
     // Iterate through all pairs of cells
     for (int i = 0; i < BOARD_SIZE - 1; i++) {
+
         for (int j = i + 1; j < BOARD_SIZE; j++) {
-            if (are_naked_pairs(p_cells[i], p_cells[j])) {
+            if(p_cells[j]->num_candidates>1 || p_cells[j]->num_candidates>1){
+                if (are_naked_pairs(p_cells[i], p_cells[j])) {
                 // Eliminate hidden pair candidates from other cells in the group
-                for(int k=0;k<BOARD_SIZE;k++){
-                    if(k!=i && k!=j){
-                        unset_candidate(p_cells[k],naked_pairs_values[0]);
-                        unset_candidate(p_cells[k],naked_pairs_values[1]);
+                
+                
+                //initiate a temp array candidates to store
+                int *temp = malloc(2*sizeof(int));
+                int *cands = get_candidates(p_cells[i]);
+                temp[0] = cands[0];     //pair value no1
+                temp[1] = cands[1];     //pair value no2
+                free(cands);
+                //set_candidates(p_cells[i],temp,2);
+                //set_candidates(p_cells[j],temp,2);
+                
+                for (int k = 0; k < BOARD_SIZE; k++){
+                    if(k!= i && k!= j && is_candidate(p_cells[k],temp[0])){
+                        unset_candidate(p_cells[k],temp[0]);
+                    }
+                    if(k!= i && k!= j && is_candidate(p_cells[k],temp[1])){
+                        unset_candidate(p_cells[k],temp[1]);
                     }
                 }
-                //counter += eliminate_candidates_npairs(p_cells, i, j);
-
+                p_cells[i]->fixed=true;
+                p_cells[j]->fixed=true;
+                free(temp);
+                //eliminate_candidates_npairs(p_cells, i, j);
+                
+                //implement the new function here!
                 counter++;
+            }
+            
             }
         }
     }
@@ -122,6 +132,29 @@ int check_naked_pairs(Cell **p_cells) {
     return counter;
 }
 
+int discard_overlapped_pairs(NakedPair *naked_pairs, int counter) {
+    int overlap = 0;
+
+    for (int i = 0; i < counter; i++) {
+        int is_overlap = 0;
+
+        for (int j = i + 1; j < counter; j++) {
+            if (memcmp(naked_pairs[i].candidates, naked_pairs[j].candidates, 2 * sizeof(int)) == 0) {
+                // Overlapping pair found
+                is_overlap = 1;
+                break;
+            }
+        }
+
+        if (!is_overlap) {
+            // No overlap, keep the pair
+            naked_pairs[overlap] = naked_pairs[i];
+            overlap++;
+        }
+    }
+
+    return counter - overlap;
+}
 
 
 int naked_pairs(SudokuBoard *p_board) {
@@ -134,129 +167,98 @@ int naked_pairs(SudokuBoard *p_board) {
         counter += check_naked_pairs(p_board->p_boxes[i]);
     }
 
-    return counter;
-}
-
-/*
-void eliminate_candidates_npairs(Cell **p_cells, int *naked_pairs_values, int num_naked_pairs) {
-    for (int i = 0; i < num_naked_pairs; i++) {
-        int value1 = naked_pairs_values[2 * i];
-        int value2 = naked_pairs_values[2 * i + 1];
-
-        for (int j = 0; j < BOARD_SIZE; j++) {
-            // Skip cells that are part of the Naked Pairs
-            if (is_candidate(p_cells[j], value1) || is_candidate(p_cells[j], value2)) {
-                continue;
-            }
-
-            // Eliminate candidates in other cells in the unit (row, column, or box)
-            unset_candidate(p_cells[j], value1);
-            unset_candidate(p_cells[j], value2);
-        }
-    }
-}
-
-// Function to find naked pairs in a row, in a column, or in a box
-int find_naked_pairs(Cell **p_cells, int *naked_pairs_values)
-{
-    int counter = 0;
-
-    for (int i = 0; i < BOARD_SIZE; i++)
-    {
-        // Skip cells with more than two candidates
-        if (p_cells[i]->num_candidates != 2)
-        {
-            continue;
-        }
-
-        for (int j = i + 1; j < BOARD_SIZE; j++)
-        {
-            // Skip cells with more than two candidates
-            if (p_cells[j]->num_candidates != 2)
-            {
-                continue;
-            }
-
-            // Check if the candidates are the same in both cells
-            if (p_cells[i]->candidates[0] == p_cells[j]->candidates[0] &&
-                p_cells[i]->candidates[1] == p_cells[j]->candidates[1])
-            {
-                // Naked pair found, add candidates to the naked_pairs_values array
-                naked_pairs_values[counter++] = p_cells[i]->candidates[0];
-                naked_pairs_values[counter++] = p_cells[i]->candidates[1];
-            }
-        }
-    }
-
-    return counter;
-}
-
-// Function to eliminate naked pairs from a row, in a column, or in a box
-int check_naked_pairs(Cell **p_cells, int *naked_pairs_values)
-{
-    int counter = 0;
-
-    for (int i = 0; i < BOARD_SIZE; i++)
-    {
-        
-        // Skip cells with more than two candidates
-        if (p_cells[i]->num_candidates > 2)
-        {
-            continue;
-        }
-        
-        // Eliminate candidates in the cell if they match the naked pair
-        for (int k = 0; k < 2; k++)
-        {
-            if (is_candidate(p_cells[i], naked_pairs_values[k]))
-            {
-                // Pass the individual cell to eliminate_candidates_npairs
-                //eliminate_candidates_npairs(p_cells[i], naked_pairs_values, 1);
-                unset_candidate(p_cells[i], naked_pairs_values[k]);
-                counter++;
-            }
-        }
-    }
-
-    return counter;
-}
-
-// Function to check naked pairs in a board and apply them
-int naked_pairs(SudokuBoard *p_board)
-{
-    int counter = 0; // Counter for the number of candidate eliminations
-
-    
-    // Check rows, cols, boxes
-    for (int i = 0; i < BOARD_SIZE; i++)
-    {
-        int naked_pairs_values[9];
-        int num_naked_pairs = find_naked_pairs(p_board->p_rows[i], naked_pairs_values);
-
-        if (num_naked_pairs > 0)
-        {
-            // Eliminate naked pairs from the row
-            counter += check_naked_pairs(p_board->p_rows[i], naked_pairs_values);
-        }
-
-        num_naked_pairs = find_naked_pairs(p_board->p_cols[i], naked_pairs_values);
-
-        if (num_naked_pairs > 0)
-        {
-            // Eliminate naked pairs from the column
-            counter += check_naked_pairs(p_board->p_cols[i], naked_pairs_values);
-        }
-
-        num_naked_pairs = find_naked_pairs(p_board->p_boxes[i], naked_pairs_values);
-
-        if (num_naked_pairs > 0)
-        {
-            // Eliminate naked pairs from the box
-            counter += check_naked_pairs(p_board->p_boxes[i], naked_pairs_values);
-        }
-    }
-
+    //call if u want here
     return counter;
 }
 */
 
+int are_naked_pairs(Cell *cell1, Cell *cell2) {
+    // Check if two cells have the same two candidates
+    if (cell1->num_candidates == 2 && cell2->num_candidates == 2 &&
+        memcmp(cell1->candidates, cell2->candidates, 2 * sizeof(int)) == 0) {
+        return 1;  // The cells form a naked pair
+    }
+    return 0;  // The cells do not form a naked pair
+}
+
+
+void check_naked_pairs(Cell **p_cells, NakedPair *naked_pairs, int *counter) {
+    for (int i = 0; i < BOARD_SIZE - 1; i++) {
+            for (int j = i + 1; j < BOARD_SIZE; j++) {
+                if (p_cells[i]->num_candidates == 2 && p_cells[j]->num_candidates == 2) {
+                    
+                    int *can1 = get_candidates(p_cells[i]);
+                    int *can2 = get_candidates(p_cells[j]);
+
+                    if (can1[0] == can2[0] &&can1[1] == can2[1]) 
+                    {
+                        int check=0;
+                        for(int c=0;c<BOARD_SIZE;c++){
+                            int *can_test = get_candidates(p_cells[c]);
+                            for(int k=0;k<can_test;k++)
+                            {
+                                if(can_test[k]==can1[0] || can_test[k]==can1[0])  //only need can1 or can2 (cuz the same)
+                                {
+                                    check++;
+                                }
+                            }
+                            if(check==1){
+                                // Naked pair found, add information to the naked_pairs array
+                                naked_pairs[*counter].p_cells[0] = p_cells[i];
+                                naked_pairs[*counter].p_cells[1] = p_cells[j];
+
+                                naked_pairs[*counter].values[0] = p_cells[i]->candidates[0];
+                                naked_pairs[*counter].values[1] = p_cells[i]->candidates[1];
+                                (*counter)++;
+                            }
+                        }
+                    }
+                    free(can1);
+                    free(can2);
+                    
+                }
+            }
+    }
+}
+
+int exclude_overlap_npairs(NakedPair *naked_pairs, int counter) {
+    int overlap =0;
+    for(int i=0;i<counter;i++){
+        int is_overlap = 1;
+        Cell *p_cell1 = naked_pairs[i].p_cells[0];
+        Cell *p_cell2 = naked_pairs[i].p_cells[1];
+        for(int j =0; j< BOARD_SIZE; j++){
+            if((p_cell1->candidates[j]) && (j+1 != naked_pairs[i].values[0]))
+                {
+                unset_candidate(p_cell1,j+1);
+                
+                is_overlap=0;
+            }
+            if((p_cell2->candidates[j]) && (j+1 != naked_pairs[i].values[0]))
+                {
+                unset_candidate(p_cell2,j+1);
+                is_overlap=0;
+            }
+        }
+        overlap+=is_overlap;
+    }
+    return counter - overlap;
+}
+
+
+
+int naked_pairs(SudokuBoard *p_board) {
+    NakedPair naked_pairs_store[BOARD_SIZE * BOARD_SIZE];
+    int counter = 0;
+
+    // Check rows, cols, boxes
+    for (int i = 0; i < BOARD_SIZE; i++)
+    {
+        check_naked_pairs(p_board->p_rows[i], naked_pairs_store, &counter);
+        check_naked_pairs(p_board->p_cols[i], naked_pairs_store, &counter);
+        check_naked_pairs(p_board->p_boxes[i], naked_pairs_store, &counter);
+    }
+
+    //counter = exclude_overlap_npairs(naked_pairs_store,counter);
+    return counter;
+}
