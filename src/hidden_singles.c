@@ -47,11 +47,6 @@ void check_hidden_singles(Cell **p_cells, HiddenSingle *hidden_singles, int *cou
     int no_hidden_single_values = find_hidden_single_values(p_cells, hidden_single_values);
     for (int i = 0; i < BOARD_SIZE; i++)   //iterate through hidden single value from 0-8
     {
-        
-        //if(apply_constraint(p_cells,hidden_single_values[i])){
-            //counter++;
-        //}
-        
         for (int j = 0; j < no_hidden_single_values; j++)        //iterate through cell
         {
             

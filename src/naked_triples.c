@@ -94,7 +94,7 @@ int naked_triples(SudokuBoard *p_board) {
         counter += check_naked_triples(p_board->p_boxes[i]);
     }
 
-    return counter;
+    return counter+1;
 }
 
 

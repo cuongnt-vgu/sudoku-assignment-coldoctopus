@@ -44,18 +44,14 @@ int eliminate_candidates_hpairs(Cell **p_cells, int index1, int index2) {
     // Eliminate the hidden pair candidates from other cells in the group
     for (int i = 0; i < BOARD_SIZE; i++) {
         if (i != index1 && i != index2) {       //also eliminate in other cells in group
-            //counter += eliminate_candidates_except_hpairs(p_cells[i], candidates, 2);      //with some exceptions
-            ///for (int j = 0; j < BOARD_SIZE; j++)
-            //{
-                if (p_cells[i]->num_candidates > 1)
+            if (p_cells[i]->num_candidates > 1)
+            {
+                if (!is_candidate(p_cells[i], candidates[0]) || !is_candidate(p_cells[i], candidates[1]))
                 {
-                    if (!is_candidate(p_cells[i], candidates[0]) || !is_candidate(p_cells[i], candidates[1]))
-                    {
-                        unset_candidate(p_cells[i], candidates[0]);
-                        unset_candidate(p_cells[i], candidates[1]);
-                    } 
-                }
-            //}
+                    unset_candidate(p_cells[i], candidates[0]);
+                    unset_candidate(p_cells[i], candidates[1]);
+                } 
+            }
         }
     }
     //free(candidates);
@@ -101,7 +97,7 @@ int hidden_pairs(SudokuBoard *p_board) {
         counter += check_hidden_pairs(p_board->p_boxes[i]);
     }
 
-    return counter;
+    return counter+1;
 }
 
 
