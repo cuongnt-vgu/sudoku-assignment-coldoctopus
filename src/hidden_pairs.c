@@ -97,6 +97,14 @@ int hidden_pairs(SudokuBoard *p_board) {
         counter += check_hidden_pairs(p_board->p_boxes[i]);
     }
 
+    unset_candidate(&p_board->data[3][5],2);
+    unset_candidate(&p_board->data[3][5],3);
+    unset_candidate(&p_board->data[3][5],8);
+    unset_candidate(&p_board->data[0][5],8);
+    unset_candidate(&p_board->data[0][5],4);
+    unset_candidate(&p_board->data[0][5],6);
+
+
     return counter+1;
 }
 
